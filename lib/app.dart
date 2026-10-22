@@ -5,6 +5,7 @@ import 'auth/auth_controller.dart';
 import 'auth/auth_scope.dart';
 import 'core/app_theme.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/intro/intro_screen.dart';
 import 'screens/main/main_shell.dart';
 import 'screens/splash_screen.dart';
 import 'shopping/cart_controller.dart';
@@ -73,16 +74,50 @@ class _AppRootState extends State<AppRoot> {
   }
 }
 
-class _AuthGate extends StatelessWidget {
+class _AuthGate extends StatefulWidget {
   const _AuthGate();
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  // Keep the splash visible long enough for its animation to play,
+  // even when the session check finishes instantly.
+  static const _minSplashDuration = Duration(milliseconds: 2000);
+  bool _splashDone = false;
+  // null until read from storage; the splash covers that short wait.
+  bool? _seenIntro;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(_minSplashDuration, () {
+      if (mounted) setState(() => _splashDone = true);
+    });
+    IntroScreen.hasBeenSeen().then((seen) {
+      if (mounted) setState(() => _seenIntro = seen);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = AuthScope.of(context);
-    return switch (auth.status) {
-      AuthStatus.checking => const SplashScreen(),
-      AuthStatus.authenticated => const MainShell(),
-      AuthStatus.unauthenticated => const LoginScreen(),
-    };
+    final Widget child = !_splashDone ||
+            auth.status == AuthStatus.checking ||
+            _seenIntro == null
+        ? const SplashScreen(key: ValueKey('splash'))
+        : switch (auth.status) {
+            AuthStatus.authenticated => const MainShell(key: ValueKey('main')),
+            _ when _seenIntro == false => IntroScreen(
+                key: const ValueKey('intro'),
+                onDone: () => setState(() => _seenIntro = true),
+              ),
+            _ => const LoginScreen(key: ValueKey('login')),
+          };
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      child: child,
+    );
   }
 }

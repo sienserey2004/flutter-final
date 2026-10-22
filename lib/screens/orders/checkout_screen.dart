@@ -3,18 +3,24 @@ import 'package:flutter/material.dart';
 import '../../auth/auth_scope.dart';
 import '../../core/app_theme.dart';
 import '../../core/format.dart';
+import '../../core/image_url.dart';
 import '../../models/address.dart';
+import '../../models/cart_item.dart';
 import '../../orders/checkout_controller.dart';
 import '../../shopping/cart_scope.dart';
 import '../../widgets/address_fields.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/coupon_field.dart';
 import '../../widgets/delivery_method_tile.dart';
+import '../../widgets/products/product_image_tile.dart';
 import '../../widgets/state_views.dart';
 import 'order_confirmation_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  const CheckoutScreen({super.key, this.items = const []});
+
+  /// Items carried over from the cart, shown in the order summary.
+  final List<CartItem> items;
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
@@ -206,10 +212,48 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _itemsCard(int count, double subtotal) => _sectionCard(
         title: '$count items · ${formatPrice(subtotal)}',
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('—', style: TextStyle(color: AppColors.textTertiary)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: widget.items.isEmpty
+              ? const Text('—',
+                  style: TextStyle(color: AppColors.textTertiary))
+              : Column(children: widget.items.map(_itemRow).toList()),
         ),
+      );
+
+  Widget _itemRow(CartItem item) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(children: [
+          SizedBox(
+            width: 52,
+            height: 52,
+            child: ProductImageTile(
+              url: resolveImageUrl(item.variant.image),
+              semanticLabel: item.productName,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.productName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                if (item.variant.label.isNotEmpty)
+                  Text(item.variant.label,
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary)),
+                Text('Qty ${item.quantity}',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          Text(formatPrice(item.subtotal),
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+        ]),
       );
 
   Widget _deliveryCard(List<Address> addresses) => _sectionCard(

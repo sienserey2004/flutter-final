@@ -71,39 +71,44 @@ class ProductCard extends StatelessWidget {
         const ProductBadge(label: 'New', kind: ProductBadgeKind.isNew),
     ];
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.m),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ProductImageTile(
-                url: product.primaryImage,
-                aspectRatio: 1,
-                semanticLabel: product.name,
-              ),
-              if (badges.isNotEmpty)
-                Positioned(top: 8, left: 8, child: Column(children: badges)),
-              if (heart != null) heart,
-            ],
+    final image = Stack(
+      fit: StackFit.expand,
+      children: [
+        ProductImageTile(
+          url: product.primaryImage,
+          semanticLabel: product.name,
+        ),
+        if (badges.isNotEmpty)
+          Positioned(top: 8, left: 8, child: Column(children: badges)),
+        if (heart != null) heart,
+      ],
+    );
+
+    // Reserve a fixed number of lines so cards in the same row line up
+    // whether the name wraps or not.
+    final textScaler = MediaQuery.textScalerOf(context);
+    final nameHeight = textScaler.scale(14) * 1.2 * 2;
+
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 8),
+        Text(
+          (product.brand ?? '').toUpperCase(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+            color: AppColors.textSecondary,
           ),
-          const SizedBox(height: 8),
-          if (product.brand != null && product.brand!.isNotEmpty)
-            Text(
-              product.brand!.toUpperCase(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          const SizedBox(height: 2),
-          Text(
+        ),
+        const SizedBox(height: 2),
+        ConstrainedBox(
+          constraints: BoxConstraints(minHeight: nameHeight),
+          child: Text(
             product.name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -114,32 +119,53 @@ class ProductCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          if (!compact) ...[
-            if (product.concerns.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(
-                product.concerns.take(2).join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-            const SizedBox(height: 4),
-            ProductRatingStars(
-              rating: product.avgRating,
-              reviewCount: product.reviewCount,
+        ),
+        if (!compact) ...[
+          const SizedBox(height: 2),
+          Text(
+            product.concerns.take(2).join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
             ),
-          ],
-          const SizedBox(height: 6),
-          PriceText(
-            price: product.basePrice,
-            compareAtPrice: product.compareAtPrice,
-            discountPercent: product.discountPercent,
+          ),
+          const SizedBox(height: 4),
+          ProductRatingStars(
+            rating: product.avgRating,
+            reviewCount: product.reviewCount,
           ),
         ],
+        const SizedBox(height: 6),
+        PriceText(
+          price: product.basePrice,
+          compareAtPrice: product.compareAtPrice,
+          discountPercent: product.discountPercent,
+        ),
+      ],
+    );
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.m),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // In a grid or fixed-height list the image takes whatever height is
+          // left after the text, so the card can never overflow. In an
+          // unbounded parent (list rows) it stays square.
+          if (constraints.hasBoundedHeight) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [Expanded(child: image), details],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [AspectRatio(aspectRatio: 1, child: image), details],
+          );
+        },
       ),
     );
   }

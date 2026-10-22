@@ -5,12 +5,15 @@ import '../../core/format.dart';
 import '../../models/product.dart';
 import '../../models/product_detail.dart';
 import '../../products/product_repository.dart';
+import '../../shopping/cart_scope.dart';
+import '../../widgets/cart_button.dart';
 import '../../widgets/products/price_text.dart';
 import '../../widgets/products/product_card_list.dart';
 import '../../widgets/products/product_image_tile.dart';
 import '../../widgets/products/product_rating_stars.dart';
 import '../../widgets/products/star_histogram_row.dart';
 import '../../widgets/state_views.dart';
+import '../shopping/cart_screen.dart';
 
 enum _DetailStatus { loading, error, ready }
 
@@ -92,9 +95,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  void _addToCart() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cart coming soon')),
+  Future<void> _addToCart() async {
+    final variantId = _selectedVariant?.variantId;
+    final messenger = ScaffoldMessenger.of(context);
+    if (variantId == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Please choose an option first')),
+      );
+      return;
+    }
+    final cart = CartScope.of(context, listen: false);
+    final ok = await cart.add(variantId: variantId);
+    if (!mounted) return;
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? 'Added "${_detail!.product.name}" to cart'
+            : cart.errorMessage ?? 'Could not add to cart'),
+        action: ok
+            ? SnackBarAction(
+                label: 'View cart',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CartScreen()),
+                ),
+              )
+            : null,
+      ),
     );
   }
 
@@ -140,10 +167,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     color: _wishlisted ? AppColors.danger : null,
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.share_outlined),
-                ),
+                const CartButton(),
               ],
             ),
             SliverToBoxAdapter(
@@ -546,6 +570,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final price = variant?.price ?? p.basePrice;
     final stock = variant?.stock ?? p.totalStock;
     final outOfStock = stock <= 0 || !p.isActive;
+    final busy = CartScope.of(context).isBusy;
 
     return SafeArea(
       top: false,
@@ -559,6 +584,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
@@ -579,8 +605,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Expanded(
               flex: 2,
               child: FilledButton(
-                onPressed: outOfStock ? null : _addToCart,
-                child: Text(outOfStock ? 'Out of stock' : 'Add to Cart'),
+                onPressed: outOfStock || busy ? null : _addToCart,
+                child: busy
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(outOfStock ? 'Out of stock' : 'Add to Cart'),
               ),
             ),
           ],

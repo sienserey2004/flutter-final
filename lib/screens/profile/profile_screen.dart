@@ -6,8 +6,12 @@ import '../../core/app_theme.dart';
 import '../../core/session_actions.dart';
 import '../../widgets/profile_header.dart';
 import '../../widgets/settings_item.dart';
+import '../info/about_screen.dart';
+import '../info/contact_screen.dart';
+import '../info/help_screen.dart';
 import '../orders/addresses_screen.dart';
 import '../orders/order_history_screen.dart';
+import '../shopping/wishlist_screen.dart';
 import '../settings/account_settings_screen.dart';
 import 'edit_profile_screen.dart';
 
@@ -67,6 +71,14 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 SettingsItem(
+                  icon: Icons.favorite_border_rounded,
+                  title: 'My Wishlist',
+                  subtitle: 'Products you saved for later',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const WishlistScreen()),
+                  ),
+                ),
+                SettingsItem(
                   icon: Icons.location_on_outlined,
                   title: 'Addresses',
                   subtitle: 'Manage delivery addresses',
@@ -90,6 +102,39 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
 
             SettingsSection(
+              title: 'Support',
+              children: [
+                SettingsItem(
+                  icon: Icons.help_outline_rounded,
+                  title: 'Help & Support',
+                  subtitle: 'Answers to common questions',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const HelpScreen()),
+                  ),
+                ),
+                SettingsItem(
+                  icon: Icons.support_agent_rounded,
+                  title: 'Contact Us',
+                  subtitle: 'Email, phone and opening hours',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const ContactScreen()),
+                  ),
+                ),
+                SettingsItem(
+                  icon: Icons.info_outline_rounded,
+                  title: 'About Aurea Skin',
+                  subtitle: 'Version ${AboutScreen.version}',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.xl),
+
+            SettingsSection(
               children: [
                 SettingsItem(
                   icon: Icons.logout_rounded,
@@ -105,7 +150,7 @@ class ProfileScreen extends StatelessWidget {
 
             const Center(
               child: Text(
-                'Version 1.0.0',
+                'Version ${AboutScreen.version}',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textTertiary,

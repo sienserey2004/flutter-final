@@ -11,6 +11,7 @@ import '../../products/product_repository.dart';
 import '../../widgets/cart_button.dart';
 import '../../widgets/products/product_card_list.dart';
 import '../../widgets/state_views.dart';
+import '../../widgets/wishlist_button.dart';
 import '../products/categories_screen.dart';
 import '../products/product_detail_screen.dart';
 import '../products/product_list_screen.dart';
@@ -233,6 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
             ],
           ),
+          const WishlistButton(),
           const CartButton(),
         ],
       ),

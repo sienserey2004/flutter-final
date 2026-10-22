@@ -11,7 +11,7 @@ class OrderRepository {
   ApiClient get api => _api;
 
   Future<List<Order>> history() async {
-    final data = await _api.request('/orders/');
+    final data = (await _api.request('/orders/'))['data'];
     final list = (data as List?) ?? const [];
     return list
         .map((e) => Order.fromJson(e as Map<String, dynamic>))
@@ -19,12 +19,12 @@ class OrderRepository {
   }
 
   Future<Order> order(int orderId) async {
-    final data = await _api.request('/orders/$orderId');
+    final data = (await _api.request('/orders/$orderId'))['data'];
     return Order.fromJson(data as Map<String, dynamic>);
   }
 
   Future<CheckoutBootstrap> loadCheckout() async {
-    final data = await _api.request('/orders/checkout') as Map<String, dynamic>;
+    final data = (await _api.request('/orders/checkout'))['data'] as Map<String, dynamic>;
     final cart = (data['cart'] as Map<String, dynamic>?) ?? const {};
     final items = (cart['items'] as List?) ?? const [];
     final addresses = (data['addresses'] as List?)
@@ -49,20 +49,20 @@ class OrderRepository {
     int? methodId,
     String couponCode = '',
   }) async {
-    final data = await _api.request('/orders/checkout', method: 'POST', body: {
+    final data = (await _api.request('/orders/checkout', method: 'POST', body: {
       'action': 'update_shipping',
       if (methodId != null) 'shipping_method_id': methodId,
       'coupon_code': couponCode,
-    }) as Map<String, dynamic>;
+    }))['data'] as Map<String, dynamic>;
     return _quoteResult(data);
   }
 
   Future<QuoteResult> applyCoupon(String code, int methodId) async {
-    final data = await _api.request('/orders/checkout', method: 'POST', body: {
+    final data = (await _api.request('/orders/checkout', method: 'POST', body: {
       'action': 'apply_coupon',
       'coupon_code': code,
       'shipping_method_id': methodId,
-    }) as Map<String, dynamic>;
+    }))['data'] as Map<String, dynamic>;
     return _quoteResult(data);
   }
 
@@ -76,7 +76,7 @@ class OrderRepository {
   }
 
   Future<PlaceOrderResult> placeOrder(Map<String, dynamic> body) async {
-    final data = await _api.request('/orders/checkout', method: 'POST', body: body);
+    final data = (await _api.request('/orders/checkout', method: 'POST', body: body))['data'];
     // Rule 1: a 200 with no 'order' key means the POST fell through.
     if (data is! Map<String, dynamic>) {
       throw const ApiException('The server did not accept the order.');
@@ -101,7 +101,7 @@ class OrderRepository {
 
   Future<KhqrPayment> khqr(int txId) async {
     final data =
-        await _api.request('/orders/khqr-payment/$txId') as Map<String, dynamic>;
+        (await _api.request('/orders/khqr-payment/$txId'))['data'] as Map<String, dynamic>;
     return KhqrPayment(
       transaction: PaymentTransactionInfo.fromJson(
           data['transaction'] as Map<String, dynamic>),

@@ -122,6 +122,24 @@ class AuthController extends ChangeNotifier {
     } catch (e) { _errorMessage = _message(e); return false; } finally { _endSubmit(); }
   }
 
+  /// Returns null on success, otherwise the error message.
+  Future<String?> changePassword({required String currentPassword, required String newPassword}) async {
+    _beginSubmit();
+    try { await api.request('/auth/change-password', method: 'POST', body: {'current_password': currentPassword, 'new_password': newPassword}); return null; }
+    catch (e) { final message = _message(e); _errorMessage = message; return message; }
+    finally { _endSubmit(); }
+  }
+
+  /// Returns null on success (and signs out), otherwise the error message.
+  Future<String?> deleteAccount({required String password}) async {
+    _beginSubmit();
+    try { await api.request('/auth/delete-account', method: 'POST', body: {'password': password}); }
+    catch (e) { final message = _message(e); _errorMessage = message; _endSubmit(); return message; }
+    _isSubmitting = false;
+    await _clearSession(); _user = null; _status = AuthStatus.unauthenticated; notifyListeners();
+    return null;
+  }
+
   Future<List<Map<String, dynamic>>> notifications() async {
     final response = await api.request('/account/notifications');
     final data = response['data'] as Map<String, dynamic>;

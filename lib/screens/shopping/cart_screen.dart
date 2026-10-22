@@ -9,6 +9,7 @@ import '../../widgets/cart_summary_card.dart';
 import '../../widgets/confirmation_dialog.dart';
 import '../../widgets/state_views.dart';
 import '../orders/checkout_screen.dart';
+import '../products/product_detail_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key, this.onCheckout});
@@ -146,7 +147,9 @@ class _CartScreenState extends State<CartScreen> {
                                 } else {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => const CheckoutScreen(),
+                                      builder: (_) => CheckoutScreen(
+                                        items: List.of(cart.cart.items),
+                                      ),
                                     ),
                                   );
                                 }
@@ -240,10 +243,12 @@ class _CartScreenState extends State<CartScreen> {
                     pending: cart.pendingItemIds.contains(item.cartItemId),
                     onQuantityChanged: (q) => _setQty(item, q),
                     onRemove: () => _remove(item),
-                    onTap: () {
-                      // Wire to ProductDetailScreen(productId: item.productId)
-                      // if you want the tile to navigate; Plan 2 already has the route.
-                    },
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ProductDetailScreen(productId: item.productId),
+                      ),
+                    ),
                   ),
                 );
               },
