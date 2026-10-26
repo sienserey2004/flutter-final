@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../auth/auth_scope.dart';
-import '../../models/product.dart';
 import '../../models/product_detail.dart';
 import '../../models/wishlist.dart';
 import '../../shopping/cart_scope.dart';
@@ -12,6 +11,7 @@ import '../../widgets/confirmation_dialog.dart';
 import '../../widgets/products/product_card.dart';
 import '../../widgets/state_views.dart';
 import '../products/product_detail_screen.dart';
+import 'cart_screen.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -59,6 +59,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
   Future<void> _moveToCart(WishlistItem item) async {
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     final cart = CartScope.of(context, listen: false);
     final api = AuthScope.of(context, listen: false).api;
 
@@ -91,9 +92,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
           content: const Text('Moved to cart'),
           action: SnackBarAction(
             label: 'View cart',
-            onPressed: () {
-              // Push CartScreen here if you want in-place nav.
-            },
+            onPressed: () => navigator.push(
+              MaterialPageRoute(builder: (_) => const CartScreen()),
+            ),
           ),
         ),
       );

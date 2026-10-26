@@ -11,6 +11,7 @@ import '../../widgets/products/price_text.dart';
 import '../../widgets/products/product_card_list.dart';
 import '../../widgets/products/product_image_tile.dart';
 import '../../widgets/products/product_rating_stars.dart';
+import '../../widgets/products/review_form_sheet.dart';
 import '../../widgets/products/star_histogram_row.dart';
 import '../../widgets/state_views.dart';
 import '../shopping/cart_screen.dart';
@@ -93,6 +94,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const SnackBar(content: Text('Could not update favorites')),
       );
     }
+  }
+
+  Future<void> _writeReview() async {
+    final messenger = ScaffoldMessenger.of(context);
+    if (!AuthScope.of(context, listen: false).isAuthenticated) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Log in to write a review')),
+      );
+      return;
+    }
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (_) => ReviewFormSheet(
+        repository: _repo,
+        productId: widget.productId,
+        productName: _detail!.product.name,
+      ),
+    );
+    if (saved != true || !mounted) return;
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Thanks! Your review was saved.')),
+    );
+    await _load();
   }
 
   Future<void> _addToCart() async {
@@ -471,9 +501,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Reviews',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Reviews',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: _writeReview,
+              icon: const Icon(Icons.rate_review_outlined, size: 18),
+              label: const Text('Write a review'),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         Row(

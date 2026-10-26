@@ -170,6 +170,27 @@ class ProductRepository {
     );
   }
 
+  /// Creates the user's review, or updates it if they already reviewed
+  /// this product (the backend keeps one review per user per product).
+  Future<ProductReview> submitReview({
+    required int productId,
+    required int rating,
+    String title = '',
+    String comment = '',
+  }) async {
+    final envelope = await api.request(
+      '/reviews/submit',
+      method: 'POST',
+      body: {
+        'product_id': productId,
+        'rating': rating,
+        'title': title.trim(),
+        'comment': comment.trim(),
+      },
+    );
+    return ProductReview.fromJson(Map<String, dynamic>.from(envelope['data'] as Map));
+  }
+
   Future<WishlistToggleResult> toggleWishlist(int productId) async {
     final envelope = await api.request(
       '/account/wishlist/toggle',

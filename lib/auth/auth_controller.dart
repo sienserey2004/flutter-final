@@ -111,7 +111,7 @@ class AuthController extends ChangeNotifier {
     finally { _endSubmit(); }
   }
 
-  Future<bool> updateProfile({required String fullName, required String email, String phone = '', String? newPassword}) async {
+  Future<bool> updateProfile({required String fullName, String phone = '', String? newPassword}) async {
     _beginSubmit();
     try {
       final body = <String, dynamic>{'name': fullName.trim(), 'phone': phone.trim()};

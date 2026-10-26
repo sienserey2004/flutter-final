@@ -23,7 +23,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   List<ActivityItem> _items = const [];
   String _filter = 'All';
 
-  static const List<String> _filters = ['All', 'Today', 'This week', 'Income'];
+  static const List<String> _filters = ['All', 'Today', 'This week', 'Pending', 'Delivered'];
 
   @override
   void initState() {
@@ -56,16 +56,21 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   List<ActivityItem> get _visibleItems {
     final query = _searchController.text.trim().toLowerCase();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Week starts on Monday.
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
 
     return _items.where((item) {
       final matchesQuery = query.isEmpty ||
           item.title.toLowerCase().contains(query) ||
           item.subtitle.toLowerCase().contains(query);
 
+      final created = item.createdAt;
       final matchesFilter = switch (_filter) {
-        'Today' => item.timeLabel.toLowerCase().startsWith('today'),
-        'This week' => !item.timeLabel.toLowerCase().contains('d ago'),
-        'Income' => item.isPositive && item.amount != null,
+        'Today' => created != null && !created.isBefore(today),
+        'This week' => created != null && !created.isBefore(weekStart),
+        'Pending' || 'Delivered' => item.status == _filter,
         _ => true,
       };
 

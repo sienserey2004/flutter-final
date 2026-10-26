@@ -33,11 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailController = TextEditingController(text: user?.email ?? '');
     _phoneController = TextEditingController(text: user?.phone ?? '');
 
-    for (final controller in [
-      _nameController,
-      _emailController,
-      _phoneController,
-    ]) {
+    for (final controller in [_nameController, _phoneController]) {
       controller.addListener(_onChanged);
     }
   }
@@ -45,7 +41,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _onChanged() {
     final user = AuthScope.of(context, listen: false).user;
     final changed = _nameController.text.trim() != (user?.fullName ?? '') ||
-        _emailController.text.trim() != (user?.email ?? '') ||
         _phoneController.text.trim() != (user?.phone ?? '');
 
     if (changed != _hasChanges) {
@@ -71,7 +66,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final success = await auth.updateProfile(
       fullName: _nameController.text,
-      email: _emailController.text,
       phone: _phoneController.text,
     );
 
@@ -121,55 +115,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     // ---- Avatar ---------------------------------------------
                     Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 46,
-                            backgroundColor: AppColors.primarySoft,
-                            backgroundImage: user?.avatarUrl != null
-                                ? NetworkImage(user!.avatarUrl!)
-                                : null,
-                            child: user?.avatarUrl == null
-                                ? Text(
-                                    user?.initials ?? '?',
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.primary,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Material(
-                              color: AppColors.primary,
-                              shape: const CircleBorder(),
-                              child: InkWell(
-                                customBorder: const CircleBorder(),
-                                onTap: auth.isSubmitting
-                                    ? null
-                                    : () => ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Image picker not wired up yet.',
-                                        ),
-                                      ),
-                                    ),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
+                      child: CircleAvatar(
+                        radius: 46,
+                        backgroundColor: AppColors.primarySoft,
+                        backgroundImage: user?.avatarUrl != null
+                            ? NetworkImage(user!.avatarUrl!)
+                            : null,
+                        child: user?.avatarUrl == null
+                            ? Text(
+                                user?.initials ?? '?',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
                                 ),
-                              ),
-                            ),
-                          ),
-                        ],
+                              )
+                            : null,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -189,22 +150,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
+                    // The backend doesn't allow changing the email, so it is
+                    // shown read-only.
                     AppTextField(
                       controller: _emailController,
                       label: 'Email',
-                      hint: 'you@example.com',
                       prefixIcon: Icons.mail_outline_rounded,
                       keyboardType: TextInputType.emailAddress,
-                      enabled: !auth.isSubmitting,
-                      validator: (value) {
-                        final v = value?.trim() ?? '';
-                        if (v.isEmpty) return 'Email is required.';
-                        if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                            .hasMatch(v)) {
-                          return 'Enter a valid email address.';
-                        }
-                        return null;
-                      },
+                      enabled: false,
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Email can\'t be changed.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
