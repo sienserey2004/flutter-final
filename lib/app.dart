@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'auth/auth_controller.dart';
 import 'auth/auth_scope.dart';
 import 'core/app_theme.dart';
-import 'screens/auth/login_screen.dart';
 import 'screens/intro/intro_screen.dart';
 import 'screens/main/main_shell.dart';
 import 'screens/splash_screen.dart';
@@ -25,6 +24,7 @@ class _AppRootState extends State<AppRoot> {
   late final CartController _cart;
   late final WishlistController _wishlist;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _wasAuthenticated = false;
 
   @override
   void initState() {
@@ -37,7 +37,13 @@ class _AppRootState extends State<AppRoot> {
   }
 
   void _handleAuthChanged() {
-    if (!_auth.isAuthenticated) {
+    final isAuthenticated = _auth.isAuthenticated;
+    if (isAuthenticated == _wasAuthenticated) return;
+    _wasAuthenticated = isAuthenticated;
+    if (isAuthenticated) {
+      _cart.bootstrap();
+      _wishlist.bootstrap();
+    } else {
       _cart.reset();
       _wishlist.reset();
       _navigatorKey.currentState?.popUntil((route) => route.isFirst);
@@ -107,14 +113,12 @@ class _AuthGateState extends State<_AuthGate> {
             auth.status == AuthStatus.checking ||
             _seenIntro == null
         ? const SplashScreen(key: ValueKey('splash'))
-        : switch (auth.status) {
-            AuthStatus.authenticated => const MainShell(key: ValueKey('main')),
-            _ when _seenIntro == false => IntroScreen(
+        : _seenIntro == false
+            ? IntroScreen(
                 key: const ValueKey('intro'),
                 onDone: () => setState(() => _seenIntro = true),
-              ),
-            _ => const LoginScreen(key: ValueKey('login')),
-          };
+              )
+            : const MainShell(key: ValueKey('main'));
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 500),
       child: child,

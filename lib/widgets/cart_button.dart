@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/session_actions.dart';
 import '../screens/shopping/cart_screen.dart';
 import '../shopping/cart_scope.dart';
 
@@ -14,7 +15,8 @@ class CartButton extends StatelessWidget {
       button: true,
       label: count > 0 ? 'Cart, $count items' : 'Cart, empty',
       child: IconButton(
-        onPressed: () {
+        onPressed: () async {
+          if (!await requireLogin(context) || !context.mounted) return;
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const CartScreen()),
           );

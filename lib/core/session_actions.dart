@@ -2,7 +2,19 @@
 import 'package:flutter/material.dart';
 
 import '../auth/auth_scope.dart';
+import '../screens/auth/login_screen.dart';
 import '../widgets/confirmation_dialog.dart';
+
+Future<bool> requireLogin(BuildContext context) async {
+  if (AuthScope.of(context, listen: false).isAuthenticated) return true;
+  final loggedIn = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => const LoginScreen(),
+    ),
+  );
+  return loggedIn == true;
+}
 
 /// Shared logout action used by Profile and Account Settings.
 ///
@@ -20,7 +32,5 @@ Future<void> confirmAndLogout(BuildContext context) async {
 
   if (!confirmed) return;
 
-  // Clearing the session flips the root gate to LoginScreen and
-  // AppRoot pops every pushed route so back navigation is impossible.
   await auth.logout();
 }

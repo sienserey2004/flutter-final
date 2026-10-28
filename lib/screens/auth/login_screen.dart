@@ -37,12 +37,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = AuthScope.of(context);
-    // On success the root AuthGate swaps to MainShell automatically,
-    // so there is no manual navigation here.
-    await auth.login(
+    final navigator = Navigator.of(context);
+    final ok = await auth.login(
       email: _emailController.text,
       password: _passwordController.text,
     );
+    if (ok && mounted) navigator.pop(true);
   }
 
   void _goToRegister() {
@@ -65,6 +65,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          tooltip: 'Close',
+          icon: const Icon(Icons.close_rounded),
+          onPressed: auth.isSubmitting
+              ? null
+              : () {
+                  auth.clearError();
+                  Navigator.of(context).pop(false);
+                },
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -93,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     const Text(
-                      'Sign in to continue to your account.',
+                      'Sign in to shop, save favorites and track orders.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14.5,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/session_actions.dart';
 import '../screens/shopping/wishlist_screen.dart';
 import '../shopping/wishlist_scope.dart';
 
@@ -15,7 +16,8 @@ class WishlistButton extends StatelessWidget {
       button: true,
       label: count > 0 ? 'Wishlist, $count saved' : 'Wishlist, empty',
       child: IconButton(
-        onPressed: () {
+        onPressed: () async {
+          if (!await requireLogin(context) || !context.mounted) return;
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const WishlistScreen()),
           );

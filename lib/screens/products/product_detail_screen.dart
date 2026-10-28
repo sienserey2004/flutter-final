@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../auth/auth_scope.dart';
 import '../../core/app_theme.dart';
 import '../../core/format.dart';
+import '../../core/session_actions.dart';
 import '../../models/product.dart';
 import '../../models/product_detail.dart';
 import '../../products/product_repository.dart';
@@ -74,12 +75,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _toggleWishlist() async {
-    final scope = AuthScope.of(context, listen: false);
-    if (!scope.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Log in to save favorites')),
-      );
-      return;
+    if (!AuthScope.of(context, listen: false).isAuthenticated) {
+      if (!await requireLogin(context) || !mounted) return;
+      await _load();
+      if (!mounted || _wishlisted) return;
     }
     final before = _wishlisted;
     setState(() => _wishlisted = !_wishlisted);
@@ -98,12 +97,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _writeReview() async {
     final messenger = ScaffoldMessenger.of(context);
-    if (!AuthScope.of(context, listen: false).isAuthenticated) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Log in to write a review')),
-      );
-      return;
-    }
+    if (!await requireLogin(context) || !mounted) return;
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -134,6 +128,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
       return;
     }
+    if (!await requireLogin(context) || !mounted) return;
     final cart = CartScope.of(context, listen: false);
     final ok = await cart.add(variantId: variantId);
     if (!mounted) return;

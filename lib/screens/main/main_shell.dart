@@ -2,8 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../auth/auth_scope.dart';
-import '../../shopping/cart_scope.dart';
-import '../../shopping/wishlist_scope.dart';
+import '../../core/session_actions.dart';
 import '../../widgets/bottom_navigation.dart';
 import '../home/home_screen.dart';
 import '../notifications/notifications_screen.dart';
@@ -20,25 +19,19 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   int _unreadNotifications = 0;
-  bool _loadedCart = false;
-  bool _loadedWishlist = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_loadedCart) {
-      _loadedCart = true;
-      CartScope.of(context, listen: false).bootstrap();
-    }
-    if (!_loadedWishlist) {
-      _loadedWishlist = true;
-      WishlistScope.of(context, listen: false).bootstrap();
-    }
     _loadUnreadCount();
   }
 
   Future<void> _loadUnreadCount() async {
     final auth = AuthScope.of(context, listen: false);
+    if (!auth.isAuthenticated) {
+      _unreadNotifications = 0;
+      return;
+    }
     try {
       final list = await auth.notifications();
       final unread = list.where((n) => n['is_read'] != true && n['read'] != true).length;
@@ -46,29 +39,33 @@ class _MainShellState extends State<MainShell> {
     } catch (_) {}
   }
 
-  void _onTabSelected(int index) {
-    setState(() => _currentIndex = index);
+  Future<void> _onTabSelected(int index) async {
+    // Every tab except Home belongs to an account.
+    if (index != 0 && !await requireLogin(context)) return;
+    if (mounted) setState(() => _currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = AuthScope.of(context);
+    final signedIn = auth.isAuthenticated;
+    final index = signedIn ? _currentIndex : 0;
 
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: index,
         children: [
           HomeScreen(
             onNavigateToTab: _onTabSelected,
             unreadNotifications: _unreadNotifications,
           ),
-          ActivityScreen(auth: auth),
-          NotificationsScreen(auth: auth),
-          const ProfileScreen(),
+          if (signedIn) ActivityScreen(auth: auth) else const SizedBox.shrink(),
+          if (signedIn) NotificationsScreen(auth: auth) else const SizedBox.shrink(),
+          if (signedIn) const ProfileScreen() else const SizedBox.shrink(),
         ],
       ),
       bottomNavigationBar: AppBottomNavigation(
-        currentIndex: _currentIndex,
+        currentIndex: index,
         onTap: _onTabSelected,
         notificationCount: _unreadNotifications,
       ),

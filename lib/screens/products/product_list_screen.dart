@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../auth/auth_controller.dart';
 import '../../auth/auth_scope.dart';
 import '../../core/app_theme.dart';
+import '../../core/session_actions.dart';
 import '../../models/filter_options.dart';
 import '../../models/product.dart';
 import '../../models/product_filter.dart';
@@ -149,13 +150,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   Future<void> _toggleWishlist(Product p) async {
-    final scope = AuthScope.of(context, listen: false);
-    if (!scope.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Log in to save favorites')),
-      );
-      return;
-    }
+    if (!await requireLogin(context) || !mounted) return;
     final wasWishlisted = _wishlisted.contains(p.productId);
     setState(() {
       if (wasWishlisted) {
