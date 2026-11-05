@@ -32,6 +32,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
       _kickedOff = true;
       if (_wl!.status == WishlistStatus.idle) {
         _wl!.bootstrap();
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _wl!.fetch();
+        });
       }
     }
   }

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../auth/auth_scope.dart';
 import '../../core/app_theme.dart';
@@ -110,6 +111,16 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
     }
   }
 
+  Future<void> _openBankApp(String link) async {
+    final opened = await launchUrl(Uri.parse(link),
+        mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the Bakong app')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _pollTimer?.cancel();
@@ -199,6 +210,12 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
           ),
         ),
         if (p.deeplink != null && p.deeplink!.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _paid ? null : () => _openBankApp(p.deeplink!),
+            icon: const Icon(Icons.phone_iphone),
+            label: const Text('Open Bakong app'),
+          ),
           const SizedBox(height: 16),
           const Text('Or open your Bakong app and scan the code',
               style:
