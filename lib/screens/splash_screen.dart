@@ -18,10 +18,12 @@ class _SplashScreenState extends State<SplashScreen>
   )..forward();
 
   late final Animation<double> _logoScale = Tween<double>(begin: 0.6, end: 1)
-      .animate(CurvedAnimation(
-    parent: _controller,
-    curve: const Interval(0, 0.6, curve: Curves.easeOutBack),
-  ));
+      .animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0, 0.6, curve: Curves.easeOutBack),
+        ),
+      );
 
   late final Animation<double> _logoFade = CurvedAnimation(
     parent: _controller,
@@ -49,54 +51,69 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            const Spacer(flex: 3),
-            FadeTransition(
-              opacity: _logoFade,
-              child: ScaleTransition(
-                scale: _logoScale,
-                child: const AppLogo(size: 96, invert: true),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FadeTransition(
-              opacity: _textFade,
-              child: SlideTransition(
-                position: _textSlide,
-                child: const Column(
-                  children: [
-                    Text(
-                      'Aurea Skin',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                        color: Colors.white,
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FadeTransition(
+                    opacity: _logoFade,
+                    child: ScaleTransition(
+                      scale: _logoScale,
+                      child: const AppLogo(size: 96, invert: true),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  FadeTransition(
+                    opacity: _textFade,
+                    child: SlideTransition(
+                      position: _textSlide,
+                      child: const Column(
+                        children: [
+                          Text(
+                            'Aurea Skin',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'Care that glows from within',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Care that glows from within',
-                      style: TextStyle(fontSize: 15, color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xxl * 1.5),
+                child: FadeTransition(
+                  opacity: _textFade,
+                  child: const SizedBox(
+                    width: 26,
+                    height: 26,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: Colors.white,
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-            const Spacer(flex: 2),
-            FadeTransition(
-              opacity: _textFade,
-              child: const SizedBox(
-                width: 26,
-                height: 26,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xxl * 1.5),
           ],
         ),
       ),
